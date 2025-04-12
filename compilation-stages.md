@@ -108,12 +108,12 @@ gcc     main.o -o hello     # link → executable
 
 ### Step 1: Preprocessing (creating .i file)
 The preprocessor performs the following actions −
-
+```text
 It removes all the comments in the source file(s).
 It includes the code of the header file(s), which is a file with extension .h whichcontains C function declarations and macro definitions.
 It replaces all of the macros (fragments of code which have been given a name) by theirvalues.
-
-
+```
+	
 ### Inspect the assembly (`main.s`)
 
 Open `main.s` in your editor – you’ll see something like:
