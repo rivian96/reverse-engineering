@@ -4,7 +4,7 @@ Every C (and many other high-level) programs go through four main stages before 
 
 ---
 
-# The Four Stages, at a Glance
+### The Four Stages, at a Glance
 
 ```ascii
                           +-------------------------+
