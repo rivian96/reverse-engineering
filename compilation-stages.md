@@ -6,31 +6,49 @@ Every C (and many other high-level) programs go through four main stages before 
 
 ## 1. The Four Stages, at a Glance
 
-```text
-┌────────────────────┐
-│ 1. Source code     │  main.c
-└────────┬───────────┘
-         │  (Preprocess)
-         ▼
-┌────────────────────┐
-│ 2. Preprocessed    │  main.i
-│    source          │
-└────────┬───────────┘
-         │  (Compile)
-         ▼
-┌────────────────────┐
-│ 3. Assembly text   │  main.s
-└────────┬───────────┘
-         │  (Assemble)
-         ▼
-┌────────────────────┐
-│ 4. Object file     │  main.o
-└────────┬───────────┘
-         │  (Link)
-         ▼
-┌────────────────────┐
-│ Executable binary  │  hello
-└────────────────────┘
+```ascii
+                          +-------------------------+
+                          |  Source code (.c) file  |
+                          +------------+------------+
+                                       |
+                                       v
+       +-------------------------------+-------------------------------+
+       |                   THE COMPILATION PROCESS                     |
+       |                                                               |
+       |   +------------------+                                        |
+       |   |  Pre-Processor   |   // Handles directives like #include  |
+       |   +--------+---------+   // and #define. Removes comments.    |
+       |            |                                                  |
+       |            v                                                  |
+       |   +------------------+        +---------------------------+   |
+       |   |     Compiler     |------>|    Assembly code (.s)     |    |
+       |   +--------+---------+        +---------------------------+   |
+       |            |               // Converts preprocessed code      |
+       |            v               // into assembly instructions.     |
+       |   +------------------+                                        |
+       |   |     Assembler     |---------+                             |
+       |   +--------+---------+          |                             |
+       |            |                    |                             |
+       |            v                    v                             |
+       |   +------------------+     +----------------------+           |
+       |   |      Linker       |<---|   Object file (.o)   |           |
+       |   +--------+---------+     +----------------------+           |
+       |            ^               // Converts assembly to            |
+       |            |               // machine code. Output = .o       |
+       |     +------+-------+                                          |
+       |     |   Libraries  |     // Links external libraries and      |
+       |     +--------------+     // functions with object file.       |
+       +-------------------------------+-------------------------------+
+                                       |
+                                       v
+                            +-------------------------+
+                            |    Executable file      |
+                            +-------------------------+
+                               // Final binary ready
+                               // to run on the system
+
+```
+
 ```
 
 ---
@@ -60,9 +78,8 @@ gcc -save-temps main.c -o hello
 ```
 ---
 
-## 3. “Hello, world!” Walk‑through
 
-### 3.1 Write the C source
+### 3. Write the C source
 
 ```c
 // main.c
@@ -74,13 +91,13 @@ int main() {
 }
 ```
 
-### 3.2 Generate each stage
+### 3.1 Generate each stage
 
 ```bash
 gcc -E  main.c -o main.i    # preprocess
 gcc -S  main.c -o main.s    # compile → assembly
 gcc -c  main.s -o main.o    # assemble → object
-gcc      main.o -o hello    # link → executable
+gcc     main.o -o hello     # link → executable
 ```
 
 ### 3.3 Inspect the assembly (`main.s`)
@@ -88,20 +105,35 @@ gcc      main.o -o hello    # link → executable
 Open `main.s` in your editor – you’ll see something like:
 
 ```asm
-	.file	"main.c"
-	.text
-	.globl	main
-	.p2align	4, 0x90
-main:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	leaq	L_.LC0(%rip), %rdi      # address of "Hello, world!\n"
-	call	printf@PLT
-	movl	$0, %eax
-	popq	%rbp
-	ret
-L_.LC0:
-	.string	"Hello, world!\n"
+   1   |    .file   "main.c"
+   2   │     .text
+   3   │     .section    .rodata
+   4   │ .LC0:
+   5   │     .string "Hello, world!"
+   6   │     .text
+   7   │     .globl  main
+   8   │     .type   main, @function
+   9   │ main:
+  10   │ .LFB0:
+  11   │     .cfi_startproc
+  12   │     pushq   %rbp
+  13   │     .cfi_def_cfa_offset 16
+  14   │     .cfi_offset 6, -16
+  15   │     movq    %rsp, %rbp
+  16   │     .cfi_def_cfa_register 6
+  17   │     leaq    .LC0(%rip), %rax
+  18   │     movq    %rax, %rdi
+  19   │     call    puts@PLT
+  20   │     movl    $0, %eax
+  21   │     popq    %rbp
+  22   │     .cfi_def_cfa 7, 8
+  23   │     ret
+  24   │     .cfi_endproc
+  25   │ .LFE0:
+  26   │     .size   main, .-main
+  27   │     .ident  "GCC: (Debian 14.2.0-19) 14.2.0"
+  28   │     .section    .note.GNU-stack,"",@progbits
+
 ```
 
 ---
