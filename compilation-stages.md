@@ -1,4 +1,4 @@
-# Four Stages of Compilation 
+# Stages of Compilation 
 
 Every C (and many other high-level) programs go through four main stages before becoming an executable. Here’s how it works with **GCC**:
 
@@ -51,7 +51,7 @@ Every C (and many other high-level) programs go through four main stages before 
 
 
 
- # ommands
+ ### commands
 
 1) Preprocess
 ```bash
@@ -72,13 +72,13 @@ Every C (and many other high-level) programs go through four main stages before 
  gcc main.o -o hello
 ```
 
-# Shortcut: all in one
+### Shortcut: all in one
 ```bash
 gcc main.c -o hello 
 ```
 
 GCC can do all those steps for you and leave the intermediates lying around with one flag
-
+The -save-temps flag tells GCC to keep the intermediate files.
 ```bash
 gcc -save-temps main.c -o hello
 ```
@@ -106,7 +106,15 @@ gcc -c  main.s -o main.o    # assemble → object
 gcc     main.o -o hello     # link → executable
 ```
 
-### 3.3 Inspect the assembly (`main.s`)
+### Step 1: Preprocessing (creating .i file)
+The preprocessor performs the following actions −
+
+It removes all the comments in the source file(s).
+It includes the code of the header file(s), which is a file with extension .h whichcontains C function declarations and macro definitions.
+It replaces all of the macros (fragments of code which have been given a name) by theirvalues.
+
+
+### Inspect the assembly (`main.s`)
 
 Open `main.s` in your editor – you’ll see something like:
 
