@@ -51,26 +51,29 @@ Every C (and many other high-level) programs go through four main stages before 
 
 ```
 
----
 
-## 2. Commands
+ 2. Commands
 
-```bash
-# 1) Preprocess
-gcc -E main.c -o main.i
+1) Preprocess
+ gcc -E main.c -o main.i
 
-# 2) Compile to assembly
-gcc -S main.c -o main.s
+2) Compile to assembly
+ gcc -S main.c -o main.s
 
-# 3) Assemble to object file
-gcc -c main.s -o main.o
+3) Assemble to object file
+ gcc -c main.s -o main.o
 
-# 4) Link into executable
-gcc main.o -o hello
+4) Link into executable
+ gcc main.o -o hello
+
+```
 
 # Shortcut: all in one
-gcc main.c -o hello
+```bash
+gcc main.c -o hello 
+
 ```
+
 GCC can do all those steps for you and leave the intermediates lying around with one flag
 
 ```bash
