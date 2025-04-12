@@ -1,4 +1,4 @@
-# Four Stages of Compilation with GCC
+# Four Stages of Compilation 
 
 Every C (and many other high-level) programs go through four main stages before becoming an executable. Here’s how it works with **GCC**:
 
@@ -53,7 +53,11 @@ gcc main.o -o hello
 # Shortcut: all in one
 gcc main.c -o hello
 ```
+GCC can do all those steps for you and leave the intermediates lying around with one flag
 
+```bash
+gcc -save-temps main.c -o hello
+```
 ---
 
 ## 3. “Hello, world!” Walk‑through
