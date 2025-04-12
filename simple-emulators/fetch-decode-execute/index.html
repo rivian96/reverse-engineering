@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fetch-Decode-Execute Cycle Emulator</title>
+  <style>
+    body { background: #1e1e1e; color: #eee; font-family: monospace; margin: 0; padding: 20px; }
+    h1 { margin-top: 0; }
+    .container { display: flex; flex-wrap: wrap; gap: 20px; }
+    .panel { background: #2d2d2d; padding: 10px; border-radius: 4px; }
+    .label { color: #6cf; }
+    #memory { max-height: 200px; overflow-y: auto; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #444; padding: 4px; text-align: center; }
+    .highlight { background: #444; }
+    #controls button { margin-right: 10px; padding: 8px 16px; background: #444; border: none; color: #eee; cursor: pointer; }
+    #controls button:hover { background: #555; }
+    textarea { width: 100%; height: 100px; background: #1e1e1e; color: #eee; border: 1px solid #444; padding: 5px; font-family: monospace; }
+    .status { margin-top: 10px; min-height: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Fetch-Decode-Execute Cycle Emulator</h1>
+
+  <div class="panel">
+    <label for="program">Program (one instruction per line):</label>
+    <textarea id="program"></textarea>
+    <button id="load">Load Program</button>
+  </div>
+
+  <div class="container">
+    <div class="panel" style="flex: 1 1 300px;">
+      <h2>Memory</h2>
+      <div id="memory">
+        <table>
+          <thead><tr><th>Addr</th><th>Value</th></tr></thead>
+          <tbody id="memTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" style="flex: 1 1 200px;">
+      <h2>CPU</h2>
+      <p><span class="label">PC:</span> <span id="pc">0</span></p>
+      <p><span class="label">IR:</span> <span id="ir">-</span></p>
+      <div id="decoded">
+        <p><span class="label">Opcode:</span> <span id="opcode">-</span></p>
+        <p><span class="label">Operands:</span> <span id="operands">-</span></p>
+      </div>
+      <div id="alu">
+        <p><span class="label">ALU:</span> <span id="aluOp">-</span></p>
+        <p><span class="label">Result:</span> <span id="aluRes">-</span></p>
+      </div>
+      <div id="registers">
+        <h3>Registers</h3>
+        <p>R0: <span id="r0">0</span></p>
+        <p>R1: <span id="r1">0</span></p>
+        <p>R2: <span id="r2">0</span></p>
+        <p>R3: <span id="r3">0</span></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="controls" class="panel">
+    <button id="step">Step</button>
+    <button id="run">Run</button>
+    <button id="reset">Reset</button>
+  </div>
+
+  <div class="status panel" id="status"></div>
+
+  <script>
+    const MEM_SIZE = 32;
+    let memory = new Array(MEM_SIZE).fill("");
+    let pc = 0, ir = "", opcode = "", operands = [];
+    let registers = { R0: 0, R1: 0, R2: 0, R3: 0 };
+    let running = false, runInterval;
+    let aluResult = null;
+
+    function renderMemory() {
+      const tbody = document.getElementById("memTable");
+      tbody.innerHTML = "";
+      memory.forEach((val, i) => {
+        const tr = document.createElement("tr");
+        tr.id = "cell" + i;
+        const tdA = document.createElement("td"); tdA.textContent = i;
+        const tdV = document.createElement("td"); tdV.textContent = val;
+        tr.append(tdA, tdV);
+        tbody.append(tr);
+      });
+    }
+
+    function highlightMem(addr) {
+      document.querySelectorAll("#memTable tr").forEach(tr => tr.classList.remove("highlight"));
+      const tr = document.getElementById("cell" + addr);
+      if (tr) tr.classList.add("highlight");
+    }
+
+    function renderCPU() {
+      document.getElementById("pc").textContent = pc;
+      document.getElementById("ir").textContent = ir || "-";
+      document.getElementById("opcode").textContent = opcode || "-";
+      document.getElementById("operands").textContent = operands.join(", ") || "-";
+      document.getElementById("aluOp").textContent = opcode || "-";
+      document.getElementById("aluRes").textContent = aluResult !== null ? aluResult : "-";
+      ["r0", "r1", "r2", "r3"].forEach(id => {
+        document.getElementById(id).textContent = registers[id.toUpperCase()];
+      });
+    }
+
+    function status(msg) { document.getElementById("status").textContent = msg; }
+
+    function fetchInst() {
+      ir = memory[pc] || "";
+      status("Fetched instruction at address " + pc);
+      highlightMem(pc);
+    }
+
+    function decodeInst() {
+      const parts = ir.replace(/,/g, "").split(/\s+/);
+      opcode = parts[0] || "";
+      operands = parts.slice(1);
+      aluResult = null;
+      status("Decoded: " + opcode + " " + operands.join(", "));
+    }
+
+    function executeInst() {
+      status("Executing: " + opcode);
+      switch (opcode) {
+        case "LOAD": {
+          const reg = operands[0], arg = operands[1];
+          const addr = parseInt(arg);
+          const memVal = parseInt(memory[addr]);
+          if (!isNaN(memVal)) {
+            registers[reg] = memVal;
+            status(`Loaded from memory[${addr}] = ${memVal}`);
+            highlightMem(addr);
+            aluResult = memVal;
+          } else {
+            const imm = addr;
+            registers[reg] = imm;
+            status(`Loaded immediate ${imm} into ${reg}`);
+            aluResult = imm;
+          }
+          break;
+        }
+        case "STORE": {
+          const addr = parseInt(operands[0]), reg = operands[1];
+          const val = registers[reg];
+          memory[addr] = val.toString();
+          renderMemory();
+          highlightMem(addr);
+          status(`Stored ${val} into memory[${addr}]`);
+          aluResult = val;
+          break;
+        }
+        case "ADD": {
+          const [dst, s1, s2] = operands;
+          const sum = registers[s1] + registers[s2];
+          registers[dst] = sum;
+          status(`Added ${s1} (${registers[s1]}) + ${s2} (${registers[s2]}) = ${sum}`);
+          aluResult = sum;
+          break;
+        }
+        case "SUB": {
+          const [dst, s1, s2] = operands;
+          const diff = registers[s1] - registers[s2];
+          registers[dst] = diff;
+          status(`Subtracted ${s2} (${registers[s2]}) from ${s1} (${registers[s1]}) = ${diff}`);
+          aluResult = diff;
+          break;
+        }
+        case "JUMP": {
+          const target = parseInt(operands[0]);
+          pc = target;
+          status(`Jumped to ${target}`);
+          aluResult = null;
+          return;
+        }
+        case "BEQ": {
+          const [r1, r2, tgt] = operands;
+          if (registers[r1] === registers[r2]) {
+            pc = parseInt(tgt);
+            status(`Branch taken to ${tgt}`);
+          } else {
+            status(`Branch not taken`);
+          }
+          aluResult = null;
+          break;
+        }
+        default:
+          status(`Unknown opcode: ${opcode}`);
+      }
+      pc++;
+    }
+
+    function stepCycle() {
+      if (pc < 0 || pc >= MEM_SIZE) { status("PC out of bounds"); return; }
+      if (!ir) fetchInst();
+      else if (!opcode) decodeInst();
+      else { executeInst(); ir = ""; opcode = ""; operands = []; }
+      renderCPU();
+    }
+
+    document.getElementById("load").onclick = () => {
+      const lines = document.getElementById("program").value.trim().split("\n");
+      memory = new Array(MEM_SIZE).fill("");
+      lines.forEach((l, i) => memory[i] = l.trim());
+      pc = 0; ir = ""; opcode = ""; operands = [];
+      registers = { R0: 0, R1: 0, R2: 0, R3: 0 };
+      clearInterval(runInterval); running = false;
+      aluResult = null;
+      renderMemory(); renderCPU(); status("Program loaded.");
+    };
+
+    document.getElementById("step").onclick = () => { stepCycle(); };
+    document.getElementById("run").onclick = () => {
+      if (running) { clearInterval(runInterval); running = false; status("Execution paused."); }
+      else { running = true; runInterval = setInterval(stepCycle, 500); status("Running..."); }
+    };
+    document.getElementById("reset").onclick = () => {
+      memory = new Array(MEM_SIZE).fill(""); pc = 0; ir = ""; opcode = ""; operands = [];
+      registers = { R0: 0, R1: 0, R2: 0, R3: 0 };
+      clearInterval(runInterval); running = false; aluResult = null;
+      renderMemory(); renderCPU(); status("Reset completed.");
+    };
+
+    window.onload = () => { renderMemory(); renderCPU(); status("Ready."); };
+  </script>
+</body>
+</html>
+
