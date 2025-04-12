@@ -4,7 +4,7 @@ Every C (and many other high-level) programs go through four main stages before 
 
 ---
 
-## 1. The Four Stages, at a Glance
+# The Four Stages, at a Glance
 
 ```ascii
                           +-------------------------+
@@ -16,15 +16,15 @@ Every C (and many other high-level) programs go through four main stages before 
        |                   THE COMPILATION PROCESS                     |
        |                                                               |
        |   +------------------+                                        |
-       |   |  Pre-Processor   |   // Handles directives like #include  |
-       |   +--------+---------+   // and #define. Removes comments.    |
+       |   |  Pre-Processor   |      Handles directives like #include  |
+       |   +--------+---------+      and #define. Removes comments.    |
        |            |                                                  |
        |            v                                                  |
        |   +------------------+        +---------------------------+   |
        |   |     Compiler     |------>|    Assembly code (.s)     |    |
        |   +--------+---------+        +---------------------------+   |
-       |            |               // Converts preprocessed code      |
-       |            v               // into assembly instructions.     |
+       |            |                  Converts preprocessed code      |
+       |            v                  into assembly instructions.     |
        |   +------------------+                                        |
        |   |     Assembler     |---------+                             |
        |   +--------+---------+          |                             |
@@ -33,45 +33,48 @@ Every C (and many other high-level) programs go through four main stages before 
        |   +------------------+     +----------------------+           |
        |   |      Linker       |<---|   Object file (.o)   |           |
        |   +--------+---------+     +----------------------+           |
-       |            ^               // Converts assembly to            |
-       |            |               // machine code. Output = .o       |
+       |            ^                 Assembler Converts assembly to   |
+       |            |                  machine code. Output = .o       |
        |     +------+-------+                                          |
-       |     |   Libraries  |     // Links external libraries and      |
-       |     +--------------+     // functions with object file.       |
+       |     |   Libraries  |     Linker Links external libraries and  |
+       |     +--------------+        functions with object file.       |
        +-------------------------------+-------------------------------+
                                        |
                                        v
                             +-------------------------+
                             |    Executable file      |
                             +-------------------------+
-                               // Final binary ready
-                               // to run on the system
+                               Final binary ready
+                               to run on the system
 
 ```
 
-```
 
 
- 2. Commands
+ # ommands
 
 1) Preprocess
+```bash
  gcc -E main.c -o main.i
-
+```
 2) Compile to assembly
+```bash
  gcc -S main.c -o main.s
+```
 
 3) Assemble to object file
+```bash
  gcc -c main.s -o main.o
+```
 
 4) Link into executable
+```bash
  gcc main.o -o hello
-
 ```
 
 # Shortcut: all in one
 ```bash
 gcc main.c -o hello 
-
 ```
 
 GCC can do all those steps for you and leave the intermediates lying around with one flag
@@ -82,7 +85,7 @@ gcc -save-temps main.c -o hello
 ---
 
 
-### 3. Write the C source
+###  Write the C source
 
 ```c
 // main.c
@@ -94,7 +97,7 @@ int main() {
 }
 ```
 
-### 3.1 Generate each stage
+###  Generate each stage
 
 ```bash
 gcc -E  main.c -o main.i    # preprocess
